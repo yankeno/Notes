@@ -164,11 +164,11 @@ HAVING
 |条件式|用途|
 |---|---|
 |COUNT(DISTINCT col) = COUNT(col)|col の値が一意である|
-|COUTN(_) = COUNT(col)|col に NULL が存在しない|
-|COUNT(_) = MAX(col)|col は歯抜けのない連番(開始値は 1)|
-|COUNT(_) = MAX(col) - MIN(col) + 1|col は歯抜けのない連番(開始値は任意の整数)|
+|COUTN(\*) = COUNT(col)|col に NULL が存在しない|
+|COUNT(\*) = MAX(col)|col は歯抜けのない連番(開始値は 1)|
+|COUNT(\*) = MAX(col) - MIN(col) + 1|col は歯抜けのない連番(開始値は任意の整数)|
 |MIN(col) = MAX(col)|col が 1 つだけの値を持つか、または NULL である|
-|MIN(col) _ MAX(col) > 0|すべての col_x の符号が同じである|
+|MIN(col) \* MAX(col) > 0|すべての col_x の符号が同じである|
 |MIN(col) \* MAX(col) < 0|最大値の符号が正で最小値の符号が負|
 |MIN(ABS(col)) = 0|col は少なくとも 1 つのゼロを含む|
 |MIN(col - 定数) = MAX(col - 定数)|col の最大値と最小値が指定した定数から同じ幅の距離にある|
