@@ -96,7 +96,7 @@ INNER JOIN Products P2
 - NOT EXISTS を生かすために二重否定への変換に慣れる
   - 全ての行について〜 = 〜でない行が 1 つも存在しない
 
-# HAVING 句の力
+# 6. HAVING 句の力
 
 - 現在の標準 SQL では HAVING 句を(ORDER BY を使わず)単体で使用可能  
   -> ただし SELECT で列を参照できなくなるので、固定値を返すか、集約関数を使用する必要がある
@@ -123,7 +123,8 @@ INNER JOIN Products P2
 
 ```sql
 -- 提出日に NULL を含まない(全学生がレポートを提出している)学部を選択
--- sbmt_date に NULL を含んでいる場合、COUNT(*) と COUNT(sbmt_date) が一致しない
+-- sbmt_date に NULL を含んでいる場合、
+-- COUNT(*) と COUNT(sbmt_date) が一致しない
 SELECT
     dpt
 FROM
@@ -139,3 +140,35 @@ HAVING
 |---|
 |理学部|
 |経済学部|
+
+- ダブりを検出する方法
+
+```sql
+-- 重複を排除して COUNT を取ると行数に差異が出る
+SELECT
+    center
+FROM
+    Materials
+GROUP BY
+    center
+HAVING
+    COUNT(material) <> COUNT(DISTINCT material);
+```
+
+- WHERE 句が集合の要素の性質を調べるのに対し、HAVING 句は集合自身の性質を調べる
+- SQL で検索条件を設定する時は、検索対象となる実体が集合の要素なのかを見極めることが基本
+  - 実体 1 つにつき 1 行が対応している -> 要素なので WHERE 句を使う
+  - 実体 1 つにつき複数行が対応している -> 集合なので HAVING 句を使う
+
+<u>_集合の性質を調べるための条件の使い方一覧_</u>
+|条件式|用途|
+|---|---|
+|COUNT(DISTINCT col) = COUNT(col)|col の値が一意である|
+|COUTN(_) = COUNT(col)|col に NULL が存在しない|
+|COUNT(_) = MAX(col)|col は歯抜けのない連番(開始値は 1)|
+|COUNT(_) = MAX(col) - MIN(col) + 1|col は歯抜けのない連番(開始値は任意の整数)|
+|MIN(col) = MAX(col)|col が 1 つだけの値を持つか、または NULL である|
+|MIN(col) _ MAX(col) > 0|すべての col_x の符号が同じである|
+|MIN(col) \* MAX(col) < 0|最大値の符号が正で最小値の符号が負|
+|MIN(ABS(col)) = 0|col は少なくとも 1 つのゼロを含む|
+|MIN(col - 定数) = MAX(col - 定数)|col の最大値と最小値が指定した定数から同じ幅の距離にある|

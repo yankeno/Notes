@@ -64,3 +64,55 @@ WHERE
                 OR t2.val IS NULL
             )
     );
+
+-- 演習問題6-①
+SELECT
+    CASE
+        WHEN COUNT(*) <> MAX(seq) THEN '歯抜けあり'
+        ELSE '歯抜けなし'
+    END
+FROM
+    SeqTbl;
+
+-- 演習問題6-②
+SELECT
+    dpt
+FROM
+    Students
+GROUP BY
+    dpt
+HAVING
+    count(*) = sum(
+        CASE
+            WHEN sbmt_date BETWEEN '2018-09-01'
+            AND '2018-09-30' THEN 1
+            ELSE 0
+        END
+    );
+
+-- 演習問題6-③ -> 断念...
+SELECT
+    shop,
+    COUNT(i.item) AS my_item_cnt,
+    CASE
+        WHEN COUNT(si.item) > COUNT(i.item) THEN COUNT(si.item) - COUNT(i.item)
+        ELSE 0
+    END AS diff_cnt
+FROM
+    ShopItems si
+    LEFT JOIN Items i ON si.item = i.item
+GROUP BY
+    shop;
+
+-- 演習問題6-③ 模範解答
+SELECT
+    si.shop,
+    count(si.item) AS my_item_cnt count(
+        SELECT
+            count(item) form items
+    ) - count(si.item) AS diff_cnt
+FROM
+    ShopItems si
+    INNER JOIN Items i ON si.item = i.item
+GROUP BY
+    si.shop;
