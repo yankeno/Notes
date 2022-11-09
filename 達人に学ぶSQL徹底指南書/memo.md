@@ -254,3 +254,146 @@ SELECT MASTER.age_class AS age_class,
 - 一旦スキップ
 
 # 11. SQL を速くするぞ
+
+- NOT IN と NOT EXISTS
+
+<u>_Class_A_</u>
+|id|name|
+|---|---|
+|1|田中|
+|2|鈴木|
+|3|伊集院|
+
+<u>_Class_B_</u>
+|id|name|
+|---|---|
+|1|田中|
+|2|鈴木|
+|4|西園寺|
+
+**NOT IN を使用する場合**
+
+```sql
+SELECT
+    *
+FROM
+    Class_A
+WHERE
+    id IN (
+        SELECT
+            id
+        FROM
+            Class_B
+    );
+```
+
+**NOT EXISTS を使用する場合**
+
+```sql
+SELECT
+    *
+FROM
+    Class_A A
+WHERE
+    EXISTS(
+        SELECT
+            *
+        FROM
+            Class_B B
+        WHERE
+            A.id = B.id
+    );
+```
+
+上記のような場合に EXISTS の方が速いと期待できる理由
+
+1. 結合キーにインデックスが張られていれば Class_B の実表を見ず  
+   インデックスの参照のみで済む
+2. EXISTS は 1 行でも条件に合致する行を見つけたら検索を打ち切るため、  
+   IN のように全表検索の必要がない
+
+- ソートを回避する  
+  ソートが行われるとパフォーマンスが低下する。  
+  メモリでは足りずストレージを使用した場合は特に顕著なパフォーマンス低下をもたらす。
+  ソートが発生する代表的な演算は以下の通り。
+
+  - GROUP BY 句
+  - ORDER BY 句
+  - 集約関数
+  - DISTINCT
+  - 集合演算子(UNION, INTERSEPT, EXCEPT)
+  - ウィンドウ関数
+
+- WHERE 句で書ける条件は HAVING 句には書かない
+
+  - GROUP BY 句による集約はソートやハッシュの演算を行うため、  
+    事前に行数を絞り込んだ方がソートの負荷が軽減される
+  - WHERE 句内でインデックスが利用できる可能性がある
+
+- インデックスを利用するときは、`列は裸`
+
+# 用語
+
+- スカラサブクエリ：単一行を返すサブクエリ
+
+```sql
+-- サブクエリが複数行を返す場合エラーになるので注意
+SELECT
+    name,
+    (
+        SELECT
+            MAX(amount_paid)
+        FROM
+            transaction
+    ) as max_payment
+FROM
+    transaction;
+```
+
+```sql
+SELECT
+    name,
+    payoff
+FROM
+    transaction
+WHERE
+    payoff = (
+        SELECT
+            MIN(payoff)
+        FROM
+            transaction
+    );
+```
+
+- 相関サブクエリ
+
+```sql
+SELECT
+    *
+FROM
+    earnings e
+WHERE
+    (
+        SELECT
+            unit_price
+        FROM
+            price p
+        WHERE
+            e.product_name = p.product_name
+    ) >= 10000;
+```
+
+処理の流れとしては以下の通りとなる
+
+1. 主問合せでレコードを 1 件取り出す
+2. 副問合せを実行する
+3. WHERE で抽出対象とするかを判定する
+4. 1 ~ 3 を繰り返す  
+   -> 主問合せに相関して副問合せが実行されるため相関サブクエリと呼ばれる  
+   -> 一般的には DB への負荷が大幅に増える  
+   -> 対して非相関サブクエリは、副問合せを実行し切ってから主問合せを実行する
+
+# 参考
+
+- [【SQL】相関サブクエリ入門](https://qiita.com/aki3061/items/736abd6ea883ba647586)
+- [相関サブクエリとパフォーマンス](https://zenn.dev/kou_row_line/articles/6acb7d888c9f32749c41)

@@ -116,3 +116,34 @@ FROM
     INNER JOIN Items i ON si.item = i.item
 GROUP BY
     si.shop;
+
+-- 演習問題8-②
+SELECT
+    employee,
+    COUNT(emp.child)
+FROM
+    (
+        SELECT
+            employee,
+            child_1 AS child
+        FROM
+            Personnel
+        UNION
+        ALL
+        SELECT
+            employee,
+            child_2 AS child
+        FROM
+            Personnel
+        UNION
+        ALL
+        SELECT
+            employee,
+            child_3 AS child
+        FROM
+            Personnel
+    ) emp
+GROUP BY
+    employee
+ORDER BY
+    COUNT(emp.child) DESC;
