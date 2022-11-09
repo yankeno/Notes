@@ -27,6 +27,10 @@ END;
   - CHECK 制約の中関数の引数述語の引数
   - 他の式の中（CASE 式自身も含む）
 
+# 2. 必ずわかるウィンドウ関数
+
+- 一旦スキップ
+
 # 3. 自己結合の使い方
 
 <u>_Products_</u>
@@ -172,3 +176,81 @@ HAVING
 |MIN(col) \* MAX(col) < 0|最大値の符号が正で最小値の符号が負|
 |MIN(ABS(col)) = 0|col は少なくとも 1 つのゼロを含む|
 |MIN(col - 定数) = MAX(col - 定数)|col の最大値と最小値が指定した定数から同じ幅の距離にある|
+
+# 7. ウィンドウ関数で行間比較を行う
+
+- 一旦スキップ
+
+# 8. 外部結合の使い方
+
+- スカラサブクエリはパフォーマンスが悪い
+
+<u>**小ネタ: MySQL WorkBench で SQL を一括実行する方法**</u>
+
+```
+※実行する SQL を選択した状態で
+Cmd + Shift + Enter
+```
+
+- 存在しないデータも表側に表示して集計する
+
+<u>_TblPop_</u>
+
+| pref_name | age_class | sex_cd | population |
+| --------- | --------- | ------ | ---------- |
+| '千葉'    | '1'       | 'f'    | '1000'     |
+| '千葉'    | '1'       | 'm'    | '900'      |
+| '千葉'    | '3'       | 'f'    | '900'      |
+| '東京'    | '1'       | 'f'    | '1500'     |
+| '東京'    | '1'       | 'm'    | '900'      |
+| '東京'    | '3'       | 'f'    | '1200'     |
+| '秋田'    | '1'       | 'f'    | '800'      |
+| '秋田'    | '1'       | 'm'    | '400'      |
+| '秋田'    | '3'       | 'f'    | '1000'     |
+| '秋田'    | '3'       | 'm'    | '1000'     |
+| '青森'    | '1'       | 'f'    | '500'      |
+| '青森'    | '1'       | 'm'    | '700'      |
+| '青森'    | '3'       | 'f'    | '800'      |
+
+上記のテーブルから以下の結果を得るには
+
+|     |     | 東北   | 関東   |
+| --- | --- | ------ | ------ |
+| '1' | 'm' | '1100' | '1800' |
+| '1' | 'f' | '1300' | '2500' |
+| '2' | 'm' |        |        |
+| '2' | 'f' |        |        |
+| '3' | 'm' | '1000' |        |
+| '3' | 'f' | '1800' | '2100' |
+
+```sql
+SELECT MASTER.age_class AS age_class,
+       MASTER.sex_cd AS sex_cd,
+       DATA.pop_tohoku AS pop_tohoku,
+       DATA.pop_kanto AS pop_kanto
+  FROM (SELECT age_class, sex_cd
+          FROM TblAge CROSS JOIN TblSex ) MASTER --クロス結合でマスタ同士の直積を作る
+            LEFT OUTER JOIN
+             (SELECT age_class, sex_cd,
+                     SUM(CASE WHEN pref_name IN ('青森', '秋田')
+                              THEN population ELSE NULL END) AS pop_tohoku,
+                     SUM(CASE WHEN pref_name IN ('東京', '千葉')
+                              THEN population ELSE NULL END) AS pop_kanto
+                FROM TblPop
+               GROUP BY age_class, sex_cd) DATA
+    ON MASTER.age_class = DATA.age_class
+   AND MASTER.sex_cd = DATA.sex_cd;
+```
+
+- 複数のテーブルから情報を欠落させずに取得する場合は FULL OUTER JOIN を使用する
+  ※MySQL8 では使用不可
+
+# 9. SQL で集合演算
+
+- 一旦スキップ
+
+# 10. SQL で数列を扱う
+
+- 一旦スキップ
+
+# 11. SQL を速くするぞ
