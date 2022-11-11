@@ -147,3 +147,39 @@ GROUP BY
     employee
 ORDER BY
     COUNT(emp.child) DESC;
+
+SELECT
+    project_id
+FROM
+    Projects
+GROUP BY
+    project_id
+HAVING
+    COUNT(*) = SUM(
+        CASE
+            WHEN step_nbr <= 1
+            AND STATUS = '完了' THEN 1
+            WHEN step_nbr > 1
+            AND STATUS = '待機' THEN 1
+            ELSE 0
+        END
+    );
+
+SELECT
+    *
+FROM
+    Projects P1
+WHERE
+    NOT EXISTS(
+        SELECT
+            STATUS
+        FROM
+            Projects P2
+        WHERE
+            P1.project_id = P2.project_id -- プロジェクトごとに条件を調べる
+            AND STATUS <> CASE
+                WHEN step_nbr <= 1 -- 全称分を二重否定で表現する
+                THEN '完了'
+                ELSE '待機'
+            END
+    );

@@ -1,7 +1,57 @@
 # 1. CASE 式のススメ
 
 - CASE 式の ELSE は必ず書く  
-  ELSE がない場合は CASE に該当しないものは `NULL` になる
+  -> ELSE がない場合は CASE に該当しないものは `NULL` になる
+
+- WHERE 句で条件分岐させるのは素人。プロは SELECT で分岐させる。
+
+```sql
+-- 男性の人口
+SELECT
+    pref_name,
+    population
+FROM
+    PopTbl2
+WHERE
+    sex = '1';
+
+-- 女性の人口
+SELECT
+    pref_name,
+    population
+FROM
+    PopTbl2
+WHERE
+    sex = '2';
+```
+
+-> UNION を使えば 1 つの SQL にできるが、スキャンが 2 回であるため  
+ パフォーマンスが低いうえ、コードが長くなる
+
+```sql
+SELECT
+    pref_name,
+    -- 男性の人口
+    SUM(
+        CASE
+            WHEN sex = '1' THEN population
+            ELSE 0
+        END
+    ) AS cnt_m,
+    -- 女性の人口
+    SUM(
+        CASE
+            WHEN sex = '2' THEN population
+            ELSE 0
+        END
+    ) AS cnt_f,
+FROM
+    PopTbl2
+GROUP BY
+    pref_name;
+```
+
+-> スキャンが 1 回であるためパフォーマンスが高く、コードの見通しも良い
 
 - 条件分岐を用いた UPDATE  
   以下のように UPDATE の SET 句の中で CASE 式を書くことも可能
@@ -93,8 +143,71 @@ INNER JOIN Products P2
 - 述語 = 戻り値が`真理値`になる関数
 - EXISTS 以外の述語(ex. =, >, <, LIKE, BETWEEN, IN)は 1 行を入力とする
 - EXISTS は行の集合を入力とする
+- 全称量化子：「すべての x が条件 P を満たす」を表現する道具  
+  -> 記号：∀、英語：for `All` x, ~
+- 存在量化子：「条件 P を満たす x が(少なくとも 1 つ)存在する」を表現する道具  
+  -> 記号：∃、英語：there `Exists` x that ~
+  - SQL では存在量化子(EXISTS 述語)が導入されているが、  
+    全称量化子に対応する述語は導入していない  
+    -> ただし、片方が定義されていれば、もう片方をそれで表現することが可能
 - NOT EXISTS を生かすために二重否定への変換に慣れる
   - 全ての行について〜 = 〜でない行が 1 つも存在しない
+- 集合指向的な SQL vs 述語理論的な SQL  
+  <u>_Projects_</u>
+
+| project_id | step_nbr | status |
+| ---------- | -------: | :----: |
+| AA100      |        0 |  完了  |
+| AA100      |        1 |  待機  |
+| AA100      |        2 |  待機  |
+| B200       |        0 |  待機  |
+| B200       |        1 |  待機  |
+| CS300      |        0 |  完了  |
+| CS300      |        1 |  完了  |
+| CS300      |        2 |  待機  |
+| CS300      |        3 |  待機  |
+| DY400      |        0 |  完了  |
+| DY400      |        1 |  完了  |
+| DY400      |        2 |  完了  |
+
+```sql
+-- 集合指向的な SQL
+SELECT
+    project_id
+FROM
+    Projects
+GROUP BY
+    project_id
+HAVING
+    COUNT(*) = SUM(
+        CASE
+            WHEN step_nbr <= 1 AND STATUS = '完了' THEN 1
+            WHEN step_nbr > 1 AND STATUS = '待機' THEN 1
+            ELSE 0
+        END
+    );
+```
+
+```sql
+-- 述語論理的な SQL
+SELECT
+    *
+FROM
+    Projects P1
+WHERE
+    NOT EXISTS(
+        SELECT
+            STATUS
+        FROM
+            Projects P2
+        WHERE
+            P1.project_id = P2.project_id -- プロジェクトごとに条件を調べる
+            AND STATUS <> CASE WHEN step_nbr <= 1 -- 全称分を二重否定で表現する
+                THEN '完了'
+                ELSE '待機'
+            END
+    );
+```
 
 # 6. HAVING 句の力
 
@@ -190,30 +303,30 @@ Cmd + Shift + Enter
 
 | pref_name | age_class | sex_cd | population |
 | --------- | --------- | ------ | ---------- |
-| '千葉'    | '1'       | 'f'    | '1000'     |
-| '千葉'    | '1'       | 'm'    | '900'      |
-| '千葉'    | '3'       | 'f'    | '900'      |
-| '東京'    | '1'       | 'f'    | '1500'     |
-| '東京'    | '1'       | 'm'    | '900'      |
-| '東京'    | '3'       | 'f'    | '1200'     |
-| '秋田'    | '1'       | 'f'    | '800'      |
-| '秋田'    | '1'       | 'm'    | '400'      |
-| '秋田'    | '3'       | 'f'    | '1000'     |
-| '秋田'    | '3'       | 'm'    | '1000'     |
-| '青森'    | '1'       | 'f'    | '500'      |
-| '青森'    | '1'       | 'm'    | '700'      |
-| '青森'    | '3'       | 'f'    | '800'      |
+| 千葉      | 1         | f      | 1000       |
+| 千葉      | 1         | m      | 900        |
+| 千葉      | 3         | f      | 900        |
+| 東京      | 1         | f      | 1500       |
+| 東京      | 1         | m      | 900        |
+| 東京      | 3         | f      | 1200       |
+| 秋田      | 1         | f      | 800        |
+| 秋田      | 1         | m      | 400        |
+| 秋田      | 3         | f      | 1000       |
+| 秋田      | 3         | m      | 1000       |
+| 青森      | 1         | f      | 500        |
+| 青森      | 1         | m      | 700        |
+| 青森      | 3         | f      | 800        |
 
 上記のテーブルから以下の結果を得るには
 
-|     |     | 東北   | 関東   |
-| --- | --- | ------ | ------ |
-| '1' | 'm' | '1100' | '1800' |
-| '1' | 'f' | '1300' | '2500' |
-| '2' | 'm' |        |        |
-| '2' | 'f' |        |        |
-| '3' | 'm' | '1000' |        |
-| '3' | 'f' | '1800' | '2100' |
+|     |     | 東北 | 関東 |
+| --- | --- | ---- | ---- |
+| 1   | m   | 1100 | 1800 |
+| 1   | f   | 1300 | 2500 |
+| 2   | m   |      |      |
+| 2   | f   |      |      |
+| 3   | m   | 1000 |      |
+| 3   | f   | 1800 | 2100 |
 
 ```sql
 SELECT MASTER.age_class AS age_class,
