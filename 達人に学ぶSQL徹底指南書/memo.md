@@ -416,13 +416,28 @@ WHERE
   - ORDER BY 句
   - 集約関数
   - DISTINCT
-  - 集合演算子(UNION, INTERSEPT, EXCEPT)
+  - 集合演算子(UNION, INTERSECT, EXCEPT)
   - ウィンドウ関数
 
 - WHERE 句で書ける条件は HAVING 句には書かない
 
   - GROUP BY 句による集約はソートやハッシュの演算を行うため、事前に行数を絞り込んだ方がソートの負荷が軽減される
   - WHERE 句内でインデックスが利用できる可能性がある
+
+<u>**小ネタ: SQL の実行順序**</u>
+
+```
+「ふじわぐはせおり」で覚える
+
+1. FROM
+2. JOIN
+3. WHERE
+4. GROUP BY
+5. HAVING
+6. SELECT
+7. ORDER BY
+8. LIMIT
+```
 
 - インデックスを正しく使用する
 
