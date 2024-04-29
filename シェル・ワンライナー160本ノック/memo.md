@@ -154,7 +154,7 @@ $ echo $?
 2
 
 # コマンド名を間違える
-$ gre 'bush' /etc/passwd
+$ grep 'bush' /etc/passwd
 Command 'gre' not found, did you mean:
   command 'grv' from snap grv (0.3.2-5-gcffa246)
   command 'grn' from deb groff (1.22.4-8build1)
