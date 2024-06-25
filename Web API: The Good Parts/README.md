@@ -75,6 +75,11 @@
 
 ## ステータスコードを正しく使う
 
+### 正しいステータスコードを使うべき理由
+
+- そもそも API の利用者には 200 番台はリクエスト成功、400/500 番台は失敗といった共通認識があるので、すべてのレスポンスのステータスコードを 200 にするといった設計にした場合、混乱を招く
+- HTTP のクライアントライブラリは基本的にステータスコードを見て大まかな振る舞いを決めるため、適切でないステータスコードを返した場合に問題を引き起こす可能性がある
+
 ### 200 番台
 
 - DELETE でリソースを削除した場合は空のレスポンスとともに 204 を返す
@@ -113,7 +118,7 @@
 - リクエストの際には Content-Type でリクエストボディの形式を指定、Accept でレスポンスとして欲しいメディアタイプを指定する
 - Accept には複数のメディアタイプとその優先度を指定できるが、そもそも欲しいメディアタイプだけを Accept に指定すればよい
 
-# メモ
+## メモ
 
 - 単語の連結はなるべく避ける
   - 繋げる場合はハイフン繋ぎ
@@ -123,6 +128,29 @@
 - envelope(封筒 = データをくるむための構造)はなるべく使用せず、ヘッダーを使用する
 - バージョニングのルールとして広く知られるものとして[セマンティックバージョニング](https://semver.org/lang/ja/)がある
 
+## まとめ
+
+- 独自仕様はなるべく避け、HTTP の仕様に準ずる
+
+## 記事 URL
+
+https://qiita.com/lvn-okino/items/df16b0922dff67443d38
+
 ## 参考
 
-- [HTTP レスポンスステータスコード](https://developer.mozilla.org/ja/docs/Web/HTTP/Status)
+### 書籍
+
+- [Web API: The Good Parts](https://amzn.asia/d/ilfvNuk)
+- [Web を支える技術 ―― HTTP，URI，HTML，そして REST](https://amzn.asia/d/5igQxIT)
+- [体系的に学ぶ 安全な Web アプリケーションの作り方 脆弱性が生まれる原理と対策の実践](https://amzn.asia/d/8ltzzZN)
+
+### URL
+
+- [MDN HTTP](https://developer.mozilla.org/ja/docs/Web/HTTP)
+- [Twitter API](https://developer.twitter.com/en/docs/api-reference-index)
+- [GitHub API](https://docs.github.com/ja/rest/pulls/reviews?apiVersion=2022-11-28)
+- [Notion API](https://developers.notion.com/reference/intro)
+- [YouTube Data API ](https://developers.google.com/youtube/v3/docs?hl=ja)
+- [LINE Messaging API](https://developers.line.biz/ja/reference/messaging-api/)
+- [Rakuten Webservice](https://webservice.rakuten.co.jp/documentation)
+- [Qiita API](https://qiita.com/api/v2/docs)
